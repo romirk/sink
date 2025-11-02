@@ -2,12 +2,12 @@ use crate::job::{busywork, Message};
 use std::collections::{HashMap, HashSet};
 use std::sync::mpsc;
 use std::thread;
+use std::time::Duration;
 
 pub fn run(jobs: usize) {
     let (tx, rx) = mpsc::channel();
     let mut handles = (0..jobs)
         .map(|id| {
-            println!("starting worker thread");
             let tx = tx.clone();
             let (t2, r2) = mpsc::channel();
             (
@@ -26,10 +26,10 @@ pub fn run(jobs: usize) {
         .collect::<HashMap<_, _>>();
 
     while handles.len() > 0 {
-        let result = rx.recv().unwrap();
+        let result = rx.recv_timeout(Duration::from_secs(75)).expect("Deadlock");
         match result {
             Message::Ok(job) | Message::Err(job) => {
-                println!("[{job}] success");
+                // println!("[{job}] success");
                 let (_, handle) = handles.remove(&job).unwrap();
                 handle.join().unwrap();
 
@@ -39,11 +39,13 @@ pub fn run(jobs: usize) {
                     tx.send(Message::Unblocked).unwrap();
                 });
                 blocked_tasks.clear();
+                // println!("remaining tasks: {:?}", handles.keys());
             }
             Message::Blocked(job, blocker) => {
-                println!("[{job}] blocked by {blocker}");
+                // println!("[{job}] blocked by {blocker}");
 
                 if handles.contains_key(&blocker) && !blockers[&job].contains(&blocker) {
+                    // TODO detect cycles
                     blockers.get_mut(&blocker).unwrap().insert(job);
                 } else {
                     let (tx, _) = handles.get_mut(&job).unwrap();
