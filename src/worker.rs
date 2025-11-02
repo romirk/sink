@@ -13,7 +13,7 @@ pub fn run(jobs: usize) {
             (
                 t2,
                 thread::spawn(move || {
-                    busywork(id, tx, r2);
+                    let _ = busywork(id, tx, r2);
                 }),
             )
         })
@@ -21,7 +21,7 @@ pub fn run(jobs: usize) {
         .collect::<HashMap<_, _>>();
 
     let mut blockers = (0..jobs)
-        .map(|id| HashSet::new())
+        .map(|_| HashSet::new())
         .enumerate()
         .collect::<HashMap<_, _>>();
 

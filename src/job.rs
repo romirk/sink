@@ -46,7 +46,7 @@ pub fn busywork(id: usize, tx: Sender<Message>, rx: Receiver<Message>) -> JobRes
             print!("\x1b[{row};32H{blocker}");
             stdout().flush().expect("unable to flush");
             tx.send(Message::Blocked(id, blocker)).unwrap();
-            while let response = rx.recv().unwrap()  {
+            while let Ok(response) = rx.recv() {
                 match response {
                    Message::Unblocked => break,
                     _ => {
