@@ -31,14 +31,6 @@ pub fn busywork(id: usize, tx: Sender<Message>, rx: Receiver<Message>) -> JobRes
 
     sleep(delay);
     for i in (1..runtime).rev() {
-        let should_error = rng.random::<u8>() == 0;
-        if should_error {
-            println!("[{id}] stop {i}");
-
-            tx.send(Message::Err(id)).unwrap();
-            return Err(id);
-        }
-
         let should_block = rng.random::<u8>() % 10 == 0;
         if should_block {
             let mut blocker = rng.random_range(0..10);
